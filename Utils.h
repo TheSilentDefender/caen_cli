@@ -20,6 +20,11 @@ namespace util
     (std::cerr << ... << std::forward<Args>(args));
   }
 
+  inline void flush()
+  {
+    std::cout << std::flush;
+  }
+
   inline uint64_t toUint64OrZero(const std::string &value)
   {
     if (value.empty())

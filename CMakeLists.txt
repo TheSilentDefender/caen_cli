@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
-project(caen_scope
+project(caen_cli
     VERSION 0.1
     DESCRIPTION "CAEN digitiser oscilloscope frontend"
     LANGUAGES CXX)
@@ -152,7 +152,7 @@ FetchContent_Declare(tomlplusplus
     GIT_SHALLOW    TRUE)
 FetchContent_MakeAvailable(tomlplusplus)
 
-add_executable(caen_scope
+add_executable(caen_cli
     main.cpp
     CaenScope.cpp
     Acquisition.cpp
@@ -161,20 +161,20 @@ add_executable(caen_scope
     SavingLoop.cpp
 )
 
-target_include_directories(caen_scope PRIVATE
+target_include_directories(caen_cli PRIVATE
     ${ftxui_SOURCE_DIR}/include
     ${ftxui_BINARY_DIR}/include
     ${CAEN_FELIB_INCLUDE_DIR}
 )
 
-target_compile_options(caen_scope PRIVATE
+target_compile_options(caen_cli PRIVATE
     -Wall
     -Wextra
     -Wpedantic
     $<$<CXX_COMPILER_ID:GNU,Clang>:-Wno-error=pedantic>
 )
 
-target_link_libraries(caen_scope PRIVATE
+target_link_libraries(caen_cli PRIVATE
     CAEN::FELib
     CLI11::CLI11
     ftxui::screen
@@ -186,13 +186,13 @@ target_link_libraries(caen_scope PRIVATE
 )
 
 if(CAEN_SCOPE_FULLY_STATIC)
-    target_link_options(caen_scope PRIVATE -static-libstdc++ -static-libgcc)
+    target_link_options(caen_cli PRIVATE -static-libstdc++ -static-libgcc)
 endif()
 
 
 if(CAEN_SCOPE_STRIP_ISA_NOTES)
-    add_custom_command(TARGET caen_scope POST_BUILD
-        COMMAND objcopy --remove-section .note.gnu.property $<TARGET_FILE:caen_scope>
+    add_custom_command(TARGET caen_cli POST_BUILD
+        COMMAND objcopy --remove-section .note.gnu.property $<TARGET_FILE:caen_cli>
         COMMENT "Stripping .note.gnu.property for portability"
     )
 endif()
@@ -208,7 +208,7 @@ if(CAEN_SCOPE_ADD_DISTCLEAN)
             "${CMAKE_BINARY_DIR}/build.ninja"
             "${CMAKE_BINARY_DIR}/.ninja_deps"
             "${CMAKE_BINARY_DIR}/.ninja_log"
-            "${CMAKE_BINARY_DIR}/caen_scope"
+            "${CMAKE_BINARY_DIR}/caen_cli"
         COMMENT "distclean: removing CMake-generated build files"
     )
 endif()

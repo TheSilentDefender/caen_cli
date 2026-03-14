@@ -41,7 +41,21 @@ namespace
         bool verbose = false;
     };
 
-    addresses = collectAddresses(options, settingsByAddress, channelDefaultsByAddress);
+    bool isChannelSection(const std::string &section)
+    {
+        if (section.empty())
+        {
+            return false;
+        }
+
+        for (unsigned char character : section)
+        {
+            if (!std::isdigit(character))
+            {
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -50,8 +64,24 @@ namespace
         if (selector.empty())
         {
             return false;
-    if (!connectScopes(addresses, scopes, options.verbose))
+        }
+
+        for (unsigned char character : selector)
+        {
+            if (!std::isdigit(character) && character != ',' && character != '-')
+            {
+                return false;
+            }
+        }
+
+        if (selector.front() == ',' || selector.back() == ',' || selector.front() == '-' || selector.back() == '-')
+        {
+            return false;
+        }
+
+        return true;
     }
+
     bool parseChannelSelectorSpec(const std::string &spec,
                                   int numChannels,
                                   std::vector<int> &channels,
@@ -1192,7 +1222,7 @@ int main(int argc, char **argv)
                 util::print(screen.ResetPosition());
 
             screen.Print();
-            util::print(std::flush);
+            util::flush();
 
             std::this_thread::sleep_for(std::chrono::milliseconds(
                 static_cast<int>(kDisplayIntervalSeconds * 1000)));
@@ -1200,7 +1230,8 @@ int main(int argc, char **argv)
 
         if (useTui)
         {
-            util::print("\n", std::flush);
+            util::print("\n");
+            util::flush();
         }
     });
 

@@ -156,7 +156,7 @@ void Acquisition::savingLoop()
     int32_t channelsWithData = 0;
     uint32_t samplesPerChannel = 0;
     bool sampleMismatch = false;
-    computeEventShape(channelsWithData, samplesPerChannel, sampleMismatch);
+    computeEventShape(packet, channelsWithData, samplesPerChannel, sampleMismatch);
 
     if (sampleMismatch && verbose_)
     {
