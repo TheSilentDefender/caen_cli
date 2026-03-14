@@ -46,3 +46,9 @@ jobs:
     - name: Build
       run: |
         cmake --build build -j
+
+    - name: Upload build
+      uses: actions/upload-artifact@v4
+      with:
+        name: caen_cli
+        path: caen_cli
