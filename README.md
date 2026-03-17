@@ -6,7 +6,23 @@ It can:
 - connect to one or more devices
 - apply settings from a TOML config
 - run acquisition and save binary waveform data
-- show a live terminal view during acquisition
+- show a live stats view during acq
+
+
+## Help
+
+Usage: ./build/caen_cli [OPTIONS]
+
+Options:
+  -h,--help                   Show this help message and exit
+  -s,--settings,--config TEXT Settings file with address-qualified sections (required for acquisition)
+  -o,--output TEXT            Output directory for generated files
+  -a,--address TEXT           Device address (for --test or --get)
+  -g,--get TEXT               Read and print a FELib path; may be repeated
+  -t,--test                   Connect, print device info, and exit (requires --address)
+  --reboot                    Send /cmd/reboot to all devices in settings file
+  -v,--verbose                Print detailed acquisition and settings diagnostics
+
 
 ## Build
 
@@ -58,4 +74,4 @@ Acquisition writes binary output files into the selected output directory using 
 ## Notes
 
 - Press `Q` to stop acquisition.
-- Press `T` to send a software trigger (when enabled by device config).
+- Press `T` to send a software trigger when enabled.
