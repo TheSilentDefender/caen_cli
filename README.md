@@ -10,7 +10,7 @@ It can:
 
 
 ## Help
-
+```
 Usage: ./build/caen_cli [OPTIONS]
 
 Options:
@@ -22,8 +22,7 @@ Options:
   -t,--test                   Connect, print device info, and exit (requires --address)
   --reboot                    Send /cmd/reboot to all devices in settings file
   -v,--verbose                Print detailed acquisition and settings diagnostics
-
-
+```
 ## Build
 
 ```bash
