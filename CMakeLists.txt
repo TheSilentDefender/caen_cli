@@ -152,16 +152,23 @@ FetchContent_Declare(tomlplusplus
     GIT_SHALLOW    TRUE)
 FetchContent_MakeAvailable(tomlplusplus)
 
+set(CAEN_CLI_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
+
 add_executable(caen_cli
-    main.cpp
-    CaenScope.cpp
-    Acquisition.cpp
-    AcquisitionSetup.cpp
-    AcquisitionLoop.cpp
-    SavingLoop.cpp
+    ${CAEN_CLI_SRC_DIR}/main.cpp
+    ${CAEN_CLI_SRC_DIR}/CaenScope.cpp
+    ${CAEN_CLI_SRC_DIR}/Acquisition.cpp
+    ${CAEN_CLI_SRC_DIR}/AcquisitionSetup.cpp
+    ${CAEN_CLI_SRC_DIR}/AcquisitionLoop.cpp
+    ${CAEN_CLI_SRC_DIR}/SavingLoop.cpp
+)
+
+set_target_properties(caen_cli PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}"
 )
 
 target_include_directories(caen_cli PRIVATE
+    ${CAEN_CLI_SRC_DIR}
     ${ftxui_SOURCE_DIR}/include
     ${ftxui_BINARY_DIR}/include
     ${CAEN_FELIB_INCLUDE_DIR}

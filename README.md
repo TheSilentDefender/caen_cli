@@ -66,6 +66,33 @@ From settings file addresses:
 ./build/caen_cli --reboot --settings example_settings.toml
 ```
 
+### Configure channels with a mask
+
+Channel settings are applied from the `["<address>".ch]` table, which sets defaults for every channel. You can override a subset of channels with a mask-based section using `["<address>".ch.mask.<mask>]`.
+
+The mask is interpreted bitwise:
+- bit 0 selects channel 0
+- bit 1 selects channel 1
+- bit 2 selects channel 2
+- and so on
+
+Examples:
+
+```toml
+["dig2://192.168.0.72".ch]
+chenable = "True"
+dcoffset = "50"
+triggerthr = "3277"
+
+["dig2://192.168.0.72".ch.mask.0x3]
+triggerthr = "1000"
+
+["dig2://192.168.0.72".ch.mask.0x10]
+triggerthr = "1500"
+```
+
+In this example, the base `["...".ch]` values apply to every channel, then `mask.0x3` applies only to channels 0 and 1, and `mask.0x10` applies only to channel 4.
+
 ## Output
 
 Acquisition writes binary output files into the selected output directory using the WaveDump2 single file per board setting.
