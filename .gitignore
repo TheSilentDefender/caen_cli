@@ -8,3 +8,4 @@ install_manifest.txt
 /cmake-build-*/
 .idea/
 out/
+caen_cli
