@@ -59,27 +59,24 @@ bool Acquisition::writeEventWaveforms(FILE *f,
                                       uint64_t &eventBytes) {
     for (int ch = 0; ch < nChannels_; ++ch) {
         const uint32_t nSamples = static_cast<uint32_t>(packet.waveformSizes[ch]);
-        if (nSamples == 0) {
-            continue;
-        }
-
         const uint16_t *raw = &packet.waveforms[static_cast<std::size_t>(ch) * recordLength_];
         const uint32_t writeSamples = std::min(samplesPerChannel, nSamples);
 
-        const int16_t activeChannel = static_cast<int16_t>(ch);
+        const int16_t activeChannel = (nSamples > 0) ? static_cast<int16_t>(ch) : static_cast<int16_t>(-1);
         if (!writeChecked(f, &activeChannel, sizeof(int16_t), 1)) {
             return false;
         }
 
+        std::fill(voltsBuf_.begin(), voltsBuf_.begin() + samplesPerChannel, 0.0f);
         for (uint32_t s = 0; s < writeSamples; ++s) {
             voltsBuf_[s] = static_cast<float>(raw[s] * adcScale + adcOffset);
         }
 
-        if (!writeChecked(f, voltsBuf_.data(), sizeof(float), writeSamples)) {
+        if (!writeChecked(f, voltsBuf_.data(), sizeof(float), samplesPerChannel)) {
             return false;
         }
 
-        eventBytes += sizeof(int16_t) + sizeof(float) * writeSamples;
+        eventBytes += sizeof(int16_t) + sizeof(float) * samplesPerChannel;
     }
 
     return true;
@@ -137,15 +134,8 @@ void Acquisition::savingLoop() {
             break;
         }
 
-        int32_t channelsWithData = 0;
-        uint32_t samplesPerChannel = 0;
-        bool sampleMismatch = false;
-        computeEventShape(packet, channelsWithData, samplesPerChannel, sampleMismatch);
-
-        if (sampleMismatch && verbose_) {
-            spdlog::debug("{}channel sample count mismatch in event {}; writing {} samples per channel",
-                          verbosePrefix_, packet.trigId, samplesPerChannel);
-        }
+        const int32_t channelsWithData = nChannels_;
+        const uint32_t samplesPerChannel = static_cast<uint32_t>(recordLength_);
 
         uint64_t eventBytes = kEventHeaderBytes;
 
