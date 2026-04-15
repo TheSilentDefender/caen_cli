@@ -37,19 +37,19 @@ cmake --build build -j
 ### Acquisition
 
 ```bash
-./build/caen_cli --settings example_settings.toml --output ./data
+./caen_cli --settings example_settings.toml --output ./data
 ```
 
 ### Test a single device connection
 
 ```bash
-./build/caen_cli --test --address "dig2://192.168.1.100"
+./caen_cli --test --address "dig2://192.168.1.100"
 ```
 
 ### Read one or more FELib paths
 
 ```bash
-./build/caen_cli --address "dig2://192.168.1.100" --get /par/modelname --get /par/numch
+./caen_cli --address "dig2://192.168.1.100" --get /par/modelname --get /par/numch
 ```
 
 ### Reboot device(s)
@@ -57,13 +57,13 @@ cmake --build build -j
 Single address:
 
 ```bash
-./build/caen_cli --reboot --address "dig2://192.168.1.100"
+./caen_cli --reboot --address "dig2://192.168.1.100"
 ```
 
 From settings file addresses:
 
 ```bash
-./build/caen_cli --reboot --settings example_settings.toml
+./caen_cli --reboot --settings example_settings.toml
 ```
 
 ### Configure channels with a mask
