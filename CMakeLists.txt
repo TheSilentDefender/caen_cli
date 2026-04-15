@@ -5,6 +5,8 @@ project(caen_cli
     DESCRIPTION "CAEN digitiser oscilloscope frontend"
     LANGUAGES CXX)
 
+include(GNUInstallDirs)
+
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
     message(FATAL_ERROR
         "In-source builds are not supported.\n"
@@ -203,6 +205,17 @@ if(CAEN_SCOPE_STRIP_ISA_NOTES)
         COMMENT "Stripping .note.gnu.property for portability"
     )
 endif()
+
+
+install(TARGETS caen_cli
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+
+install(FILES
+    ${CMAKE_CURRENT_SOURCE_DIR}/README.md
+    ${CMAKE_CURRENT_SOURCE_DIR}/example_settings.toml
+    DESTINATION ${CMAKE_INSTALL_DOCDIR}/caen_cli
+)
 
 
 if(CAEN_SCOPE_ADD_DISTCLEAN)

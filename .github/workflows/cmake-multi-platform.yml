@@ -51,4 +51,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: caen_cli
-        path: build/caen_cli
+        path: caen_cli
