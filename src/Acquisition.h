@@ -88,8 +88,7 @@ private:
 
     bool writeEventHeader(FILE *f,
                           const EventPacket &packet,
-                          uint32_t samplesPerChannel,
-                          int32_t channelsWithData) const;
+                          uint32_t samplesPerChannel) const;
 
     bool writeEventWaveforms(FILE *f,
                              const EventPacket &packet,

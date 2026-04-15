@@ -42,13 +42,12 @@ bool Acquisition::writeChecked(FILE *f, const void *data, std::size_t elemSize, 
 
 bool Acquisition::writeEventHeader(FILE *f,
                                    const EventPacket &packet,
-                                   uint32_t samplesPerChannel,
-                                   int32_t channelsWithData) const {
+                                   uint32_t samplesPerChannel) const {
     return writeChecked(f, &packet.trigId, sizeof(uint32_t), 1) &&
            writeChecked(f, &packet.timestamp, sizeof(uint64_t), 1) &&
            writeChecked(f, &samplesPerChannel, sizeof(uint32_t), 1) &&
            writeChecked(f, &kTimeResolutionNs, sizeof(uint64_t), 1) && writeChecked(
-               f, &channelsWithData, sizeof(int32_t), 1);
+               f, &nChannels_, sizeof(int32_t), 1);
 }
 
 bool Acquisition::writeEventWaveforms(FILE *f,
@@ -134,12 +133,11 @@ void Acquisition::savingLoop() {
             break;
         }
 
-        const int32_t channelsWithData = nChannels_;
         const uint32_t samplesPerChannel = static_cast<uint32_t>(recordLength_);
 
         uint64_t eventBytes = kEventHeaderBytes;
 
-        if (!writeEventHeader(f, packet, samplesPerChannel, channelsWithData)) {
+        if (!writeEventHeader(f, packet, samplesPerChannel)) {
             break;
         }
 
