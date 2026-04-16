@@ -1,0 +1,453 @@
+["dig2://192.168.0.52".par]
+acqtriggersource = "SWTrg"
+startsource = "SWcmd"
+recordlengths = "37500"
+pretriggers = "2000"
+
+["dig2://192.168.0.52".ch.0]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.1]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.2]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.3]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.4]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.5]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.6]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.7]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.8]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.9]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.10]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.11]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.12]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.13]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.14]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.15]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.16]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.17]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.18]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.19]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.20]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.21]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.22]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.23]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.24]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.25]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.26]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.27]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.28]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.29]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.30]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.31]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.32]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.33]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.34]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.35]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.36]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.37]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.38]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.39]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.40]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.41]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.42]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.43]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.44]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.45]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.46]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.47]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.48]
+chenable = "True"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.49]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.50]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.51]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.52]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.53]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.54]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.55]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.56]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.57]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.58]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.59]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.60]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.61]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.62]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
+
+["dig2://192.168.0.52".ch.63]
+chenable = "False"
+dcoffset = "50"
+selftriggeredge = "RISE"
+triggerthr = "3277"
+triggerthrmode = "Relative"
