@@ -16,6 +16,10 @@ namespace {
 constexpr int kWindowWidth = 1280;
 constexpr int kWindowHeight = 900;
 constexpr uint32_t kWindowFlags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI;
+constexpr uint32_t kRendererFlags = SDL_RENDERER_ACCELERATED;
+constexpr float kChannelPanelWidth = 220.0f;
+constexpr float kMinPlotHeight = 240.0f;
+constexpr float kStatsBlockHeight = 70.0f;
 } // namespace
 
 GuiThread::GuiThread(const std::vector<std::unique_ptr<Acquisition>> &acquisitions)
@@ -77,7 +81,7 @@ void GuiThread::guiLoop() {
         return;
     }
 
-    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, kRendererFlags);
     if (!renderer) {
         SDL_DestroyWindow(window);
         SDL_Quit();
@@ -105,6 +109,8 @@ void GuiThread::guiLoop() {
 
     std::vector<std::vector<bool>> channelVisible(acquisitions_.size());
     std::vector<bool> sawFirstEvent(acquisitions_.size(), false);
+    std::vector<uint32_t> lastSeenTrigId(acquisitions_.size(), 0);
+    std::vector<bool> sawAnySnapshot(acquisitions_.size(), false);
 
     while (!stopRequested_) {
         SDL_Event event;
@@ -128,6 +134,7 @@ void GuiThread::guiLoop() {
         ImGui::Separator();
 
         bool showedAny = false;
+        bool sawNewEvent = false;
 
         for (std::size_t dev = 0; dev < acquisitions_.size(); ++dev) {
             Acquisition::LatestEventSnapshot snapshot;
@@ -138,6 +145,12 @@ void GuiThread::guiLoop() {
             }
 
             showedAny = true;
+
+            if (!sawAnySnapshot[dev] || snapshot.trigId != lastSeenTrigId[dev]) {
+                sawNewEvent = true;
+                sawAnySnapshot[dev] = true;
+                lastSeenTrigId[dev] = snapshot.trigId;
+            }
 
             const int nChannels = snapshot.nChannels;
             const int samplesPerChannel = snapshot.recordLength;
@@ -184,14 +197,19 @@ void GuiThread::guiLoop() {
                     }
                 }
 
-                ImGui::Text("Enabled channels (%d):", enabledCount);
+                const float availableY = ImGui::GetContentRegionAvail().y;
+                const float panelHeight = std::max(kMinPlotHeight, availableY - kStatsBlockHeight);
+
+                ImGui::BeginChild((std::string("ChannelFilterPanel##") + std::to_string(dev)).c_str(),
+                                  ImVec2(kChannelPanelWidth, panelHeight), true,
+                                  ImGuiWindowFlags_AlwaysVerticalScrollbar);
+                ImGui::Text("Enabled channels (%d)", enabledCount);
+                ImGui::Separator();
                 for (int ch = 0; ch < nChannels; ++ch) {
                     if (!enabled[ch]) {
                         continue;
                     }
-                    if (ch > 0) {
-                        ImGui::SameLine();
-                    }
+
                     std::string checkboxLabel = "CH" + std::to_string(ch) + "##dev" + std::to_string(dev) + "ch" +
                                                 std::to_string(ch);
                     bool value = channelVisible[dev][ch];
@@ -199,14 +217,20 @@ void GuiThread::guiLoop() {
                         channelVisible[dev][ch] = value;
                     }
                 }
+                ImGui::EndChild();
+
+                ImGui::SameLine();
+                ImGui::BeginChild((std::string("PlotPanel##") + std::to_string(dev)).c_str(),
+                                  ImVec2(0.0f, panelHeight), false);
 
                 const int adcBits = std::max(1, snapshot.adcBits);
                 const double adcScale = 2.0 / static_cast<double>((1 << adcBits) - 1);
                 const double adcOffset = -1.0;
 
                 const std::string plotTitle = "Waveforms##plot" + std::to_string(dev);
-                if (ImPlot::BeginPlot(plotTitle.c_str(), ImVec2(-1.0f, 320.0f))) {
-                    ImPlot::SetupAxes("Sample", "Voltage (V)");
+                if (ImPlot::BeginPlot(plotTitle.c_str(), ImVec2(-1.0f, -1.0f))) {
+                    ImPlot::SetupAxes("Sample", "Voltage (V)", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
+                    ImPlot::SetupAxisLimits(ImAxis_X1, 0.0, static_cast<double>(samplesPerChannel), ImPlotCond_Always);
 
                     std::vector<float> y(static_cast<std::size_t>(samplesPerChannel), 0.0f);
                     for (int ch = 0; ch < nChannels; ++ch) {
@@ -236,6 +260,7 @@ void GuiThread::guiLoop() {
 
                     ImPlot::EndPlot();
                 }
+                ImGui::EndChild();
 
                 int visibleCount = 0;
                 for (int ch = 0; ch < nChannels; ++ch) {
@@ -266,6 +291,10 @@ void GuiThread::guiLoop() {
         SDL_RenderClear(renderer);
         ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);
         SDL_RenderPresent(renderer);
+
+        if (!sawNewEvent) {
+            SDL_Delay(1);
+        }
     }
 
     ImGui_ImplSDLRenderer2_Shutdown();
