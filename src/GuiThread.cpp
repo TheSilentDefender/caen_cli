@@ -20,6 +20,7 @@ constexpr uint32_t kRendererFlags = SDL_RENDERER_ACCELERATED;
 constexpr float kChannelPanelWidth = 220.0f;
 constexpr float kMinPlotHeight = 240.0f;
 constexpr float kStatsBlockHeight = 70.0f;
+constexpr std::size_t kPlotDownsampleFactor = 4;
 } // namespace
 
 GuiThread::GuiThread(const std::vector<std::unique_ptr<Acquisition>> &acquisitions)
@@ -111,6 +112,7 @@ void GuiThread::guiLoop() {
     std::vector<bool> sawFirstEvent(acquisitions_.size(), false);
     std::vector<Acquisition::LatestEventSnapshotPtr> lastSnapshots(acquisitions_.size());
     std::vector<std::vector<std::vector<float>>> plotBuffers(acquisitions_.size());
+    std::vector<std::vector<std::vector<float>>> plotXBuffers(acquisitions_.size());
 
     while (!stopRequested_) {
         bool renderNeeded = false;
@@ -151,8 +153,10 @@ void GuiThread::guiLoop() {
             }
 
             std::vector<std::vector<float>> &devicePlotBuffers = plotBuffers[dev];
+            std::vector<std::vector<float>> &devicePlotXBuffers = plotXBuffers[dev];
             if (static_cast<int>(devicePlotBuffers.size()) != nChannels) {
                 devicePlotBuffers.assign(static_cast<std::size_t>(nChannels), {});
+                devicePlotXBuffers.assign(static_cast<std::size_t>(nChannels), {});
                 renderNeeded = true;
             }
 
@@ -182,8 +186,14 @@ void GuiThread::guiLoop() {
 
             for (int ch = 0; ch < nChannels; ++ch) {
                 std::vector<float> &buffer = devicePlotBuffers[static_cast<std::size_t>(ch)];
-                if (static_cast<int>(buffer.size()) != samplesPerChannel) {
-                    buffer.assign(static_cast<std::size_t>(samplesPerChannel), 0.0f);
+                std::vector<float> &xbuffer = devicePlotXBuffers[static_cast<std::size_t>(ch)];
+
+                const std::size_t downsampleFactor = std::max<std::size_t>(1, kPlotDownsampleFactor);
+                const std::size_t reducedPoints = (static_cast<std::size_t>(samplesPerChannel) + downsampleFactor - 1) / downsampleFactor;
+
+                if (buffer.size() != reducedPoints || xbuffer.size() != reducedPoints) {
+                    buffer.assign(reducedPoints, 0.0f);
+                    xbuffer.assign(reducedPoints, 0.0f);
                     renderNeeded = true;
                 }
 
@@ -202,11 +212,14 @@ void GuiThread::guiLoop() {
                         ? static_cast<std::size_t>(snapshot.waveformSizes[ch])
                         : static_cast<std::size_t>(0)));
 
-                for (uint32_t s = 0; s < validSamples; ++s) {
-                    buffer[static_cast<std::size_t>(s)] = static_cast<float>(snapshot.waveforms[base + s] * adcScale + adcOffset);
+                std::size_t pointIndex = 0;
+                for (std::size_t sampleIndex = 0; sampleIndex < validSamples; sampleIndex += downsampleFactor, ++pointIndex) {
+                    buffer[pointIndex] = static_cast<float>(snapshot.waveforms[base + sampleIndex] * adcScale + adcOffset);
+                    xbuffer[pointIndex] = static_cast<float>(sampleIndex);
                 }
-                for (int s = static_cast<int>(validSamples); s < samplesPerChannel; ++s) {
-                    buffer[static_cast<std::size_t>(s)] = 0.0f;
+                for (std::size_t point = pointIndex; point < reducedPoints; ++point) {
+                    buffer[point] = 0.0f;
+                    xbuffer[point] = static_cast<float>(point * downsampleFactor);
                 }
             }
         }
@@ -303,18 +316,20 @@ void GuiThread::guiLoop() {
                     ImPlot::SetupAxisLimits(ImAxis_X1, 0.0, static_cast<double>(samplesPerChannel), ImPlotCond_Always);
 
                     const std::vector<std::vector<float>> &devicePlotBuffers = plotBuffers[dev];
+                    const std::vector<std::vector<float>> &devicePlotXBuffers = plotXBuffers[dev];
                     for (int ch = 0; ch < nChannels; ++ch) {
                         if (!enabled[ch] || !channelVisible[dev][ch]) {
                             continue;
                         }
 
                         const std::vector<float> &buffer = devicePlotBuffers[static_cast<std::size_t>(ch)];
-                        if (static_cast<int>(buffer.size()) != samplesPerChannel) {
+                        const std::vector<float> &xbuffer = devicePlotXBuffers[static_cast<std::size_t>(ch)];
+                        if (buffer.empty() || buffer.size() != xbuffer.size()) {
                             continue;
                         }
 
                         const std::string lineLabel = "CH" + std::to_string(ch);
-                        ImPlot::PlotLine(lineLabel.c_str(), buffer.data(), samplesPerChannel);
+                        ImPlot::PlotLine(lineLabel.c_str(), xbuffer.data(), buffer.data(), static_cast<int>(buffer.size()));
                     }
 
                     ImPlot::EndPlot();
