@@ -113,6 +113,9 @@ void GuiThread::guiLoop() {
     std::vector<Acquisition::LatestEventSnapshotPtr> lastSnapshots(acquisitions_.size());
     std::vector<std::vector<std::vector<float>>> plotBuffers(acquisitions_.size());
     std::vector<std::vector<std::vector<float>>> plotXBuffers(acquisitions_.size());
+    std::vector<bool> hasZoomWindow(acquisitions_.size(), false);
+    std::vector<double> zoomXMin(acquisitions_.size(), 0.0);
+    std::vector<double> zoomXMax(acquisitions_.size(), 0.0);
 
     while (!stopRequested_) {
         bool renderNeeded = false;
@@ -150,6 +153,7 @@ void GuiThread::guiLoop() {
                 channelVisible[dev].assign(static_cast<std::size_t>(nChannels), false);
                 sawFirstEvent[dev] = false;
                 renderNeeded = true;
+                hasZoomWindow[dev] = false;
             }
 
             std::vector<std::vector<float>> &devicePlotBuffers = plotBuffers[dev];
@@ -178,6 +182,7 @@ void GuiThread::guiLoop() {
                 }
                 sawFirstEvent[dev] = true;
                 renderNeeded = true;
+                hasZoomWindow[dev] = false;
             }
 
             const int adcBits = std::max(1, snapshot.adcBits);
@@ -283,9 +288,15 @@ void GuiThread::guiLoop() {
                         channelVisible[dev][ch] = false;
                     }
                 }
+                ImGui::SameLine();
+                if (ImGui::Button((std::string("Reset zoom##") + std::to_string(dev)).c_str())) {
+                    hasZoomWindow[dev] = false;
+                }
 
                 const float availableY = ImGui::GetContentRegionAvail().y;
                 const float panelHeight = std::max(kMinPlotHeight, availableY - kStatsBlockHeight);
+                const float overviewHeight = std::max(140.0f, panelHeight * 0.58f);
+                const float zoomHeight = std::max(120.0f, panelHeight - overviewHeight - 8.0f);
 
                 ImGui::BeginChild((std::string("ChannelFilterPanel##") + std::to_string(dev)).c_str(),
                                   ImVec2(kChannelPanelWidth, panelHeight), true,
@@ -311,9 +322,10 @@ void GuiThread::guiLoop() {
                                   ImVec2(0.0f, panelHeight), false);
 
                 const std::string plotTitle = "Waveforms##plot" + std::to_string(dev);
-                if (ImPlot::BeginPlot(plotTitle.c_str(), ImVec2(-1.0f, -1.0f))) {
+                if (ImPlot::BeginPlot(plotTitle.c_str(), ImVec2(-1.0f, overviewHeight))) {
                     ImPlot::SetupAxes("Sample", "Voltage (V)", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
                     ImPlot::SetupAxisLimits(ImAxis_X1, 0.0, static_cast<double>(samplesPerChannel), ImPlotCond_Always);
+                    ImPlot::SetupAxisLimits(ImAxis_Y1, -1.1, 1.1, ImPlotCond_Once);
 
                     const std::vector<std::vector<float>> &devicePlotBuffers = plotBuffers[dev];
                     const std::vector<std::vector<float>> &devicePlotXBuffers = plotXBuffers[dev];
@@ -332,8 +344,65 @@ void GuiThread::guiLoop() {
                         ImPlot::PlotLine(lineLabel.c_str(), xbuffer.data(), buffer.data(), static_cast<int>(buffer.size()));
                     }
 
+                    if (ImPlot::IsPlotSelected()) {
+                        ImPlotRect selection = ImPlot::GetPlotSelection(ImAxis_X1, ImAxis_Y1);
+                        double xMin = std::min(selection.X.Min, selection.X.Max);
+                        double xMax = std::max(selection.X.Min, selection.X.Max);
+                        xMin = std::clamp(xMin, 0.0, static_cast<double>(samplesPerChannel - 1));
+                        xMax = std::clamp(xMax, 0.0, static_cast<double>(samplesPerChannel - 1));
+                        if (xMax > xMin) {
+                            zoomXMin[dev] = xMin;
+                            zoomXMax[dev] = xMax;
+                            hasZoomWindow[dev] = true;
+                        }
+                        ImPlot::CancelPlotSelection();
+                    }
+
                     ImPlot::EndPlot();
                 }
+
+                ImGui::Dummy(ImVec2(0.0f, 6.0f));
+
+                const std::vector<std::vector<float>> &devicePlotBuffers = plotBuffers[dev];
+                const std::vector<std::vector<float>> &devicePlotXBuffers = plotXBuffers[dev];
+                if (hasZoomWindow[dev]) {
+                    ImGui::Text("Zoomed view: [%.0f, %.0f]", zoomXMin[dev], zoomXMax[dev]);
+                    const std::string zoomTitle = "Zoomed Waveforms##zoomplot" + std::to_string(dev);
+                    if (ImPlot::BeginPlot(zoomTitle.c_str(), ImVec2(-1.0f, zoomHeight))) {
+                        ImPlot::SetupAxes("Sample", "Voltage (V)", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
+                        ImPlot::SetupAxisLimits(ImAxis_X1, zoomXMin[dev], zoomXMax[dev], ImPlotCond_Always);
+                        ImPlot::SetupAxisLimits(ImAxis_Y1, -1.1, 1.1, ImPlotCond_Once);
+
+                        for (int ch = 0; ch < nChannels; ++ch) {
+                            if (!enabled[ch] || !channelVisible[dev][ch]) {
+                                continue;
+                            }
+
+                            const std::vector<float> &buffer = devicePlotBuffers[static_cast<std::size_t>(ch)];
+                            const std::vector<float> &xbuffer = devicePlotXBuffers[static_cast<std::size_t>(ch)];
+                            if (buffer.empty() || buffer.size() != xbuffer.size()) {
+                                continue;
+                            }
+
+                            const auto beginIt = std::lower_bound(xbuffer.begin(), xbuffer.end(), static_cast<float>(zoomXMin[dev]));
+                            const auto endIt = std::upper_bound(xbuffer.begin(), xbuffer.end(), static_cast<float>(zoomXMax[dev]));
+                            const int startIndex = static_cast<int>(std::distance(xbuffer.begin(), beginIt));
+                            const int endIndex = static_cast<int>(std::distance(xbuffer.begin(), endIt));
+                            const int count = endIndex - startIndex;
+                            if (count <= 1) {
+                                continue;
+                            }
+
+                            const std::string lineLabel = "CH" + std::to_string(ch) + "##zoom" + std::to_string(dev);
+                            ImPlot::PlotLine(lineLabel.c_str(), xbuffer.data() + startIndex, buffer.data() + startIndex, count);
+                        }
+
+                        ImPlot::EndPlot();
+                    }
+                } else {
+                    ImGui::TextUnformatted("Drag a box on the main plot to open a zoomed view here.");
+                }
+
                 ImGui::EndChild();
 
                 int visibleCount = 0;
