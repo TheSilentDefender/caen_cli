@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <deque>
+#include <memory>
 #include <mutex>
 #include <string>
 #include <thread>
@@ -58,7 +59,9 @@ public:
         return std::chrono::duration<double>(std::chrono::steady_clock::now() - startTime_).count();
     }
 
-    bool getLatestEventSnapshot(LatestEventSnapshot &snapshot) const;
+    using LatestEventSnapshotPtr = std::shared_ptr<const LatestEventSnapshot>;
+
+    LatestEventSnapshotPtr getLatestEventSnapshot() const;
 
     void sendTrigger();
 
@@ -133,7 +136,7 @@ private:
     std::vector<float> voltsBuf_;
 
     mutable std::mutex latestSnapshotMutex_;
-    LatestEventSnapshot latestSnapshot_;
+    LatestEventSnapshotPtr latestSnapshot_;
 
     FILE *file_ = nullptr;
 

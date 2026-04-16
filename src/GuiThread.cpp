@@ -109,60 +109,51 @@ void GuiThread::guiLoop() {
 
     std::vector<std::vector<bool>> channelVisible(acquisitions_.size());
     std::vector<bool> sawFirstEvent(acquisitions_.size(), false);
-    std::vector<uint32_t> lastSeenTrigId(acquisitions_.size(), 0);
-    std::vector<bool> sawAnySnapshot(acquisitions_.size(), false);
+    std::vector<Acquisition::LatestEventSnapshotPtr> lastSnapshots(acquisitions_.size());
+    std::vector<std::vector<std::vector<float>>> plotBuffers(acquisitions_.size());
 
     while (!stopRequested_) {
+        bool renderNeeded = false;
+        std::vector<Acquisition::LatestEventSnapshotPtr> activeSnapshots(acquisitions_.size());
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             ImGui_ImplSDL2_ProcessEvent(&event);
+            renderNeeded = true;
             if (event.type == SDL_QUIT) {
                 stopRequested_ = true;
             }
         }
 
-        ImGui_ImplSDLRenderer2_NewFrame();
-        ImGui_ImplSDL2_NewFrame();
-        ImGui::NewFrame();
-
-        ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f), ImGuiCond_Once);
-        ImGui::SetNextWindowSize(ImVec2(1260.0f, 860.0f), ImGuiCond_Once);
-        ImGui::Begin("Most Recent Event", nullptr,
-                     ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_MenuBar);
-
-        ImGui::TextUnformatted("Only enabled channels are listed. Use checkboxes to filter what is shown.");
-        ImGui::Separator();
-
-        bool showedAny = false;
-        bool sawNewEvent = false;
-
         for (std::size_t dev = 0; dev < acquisitions_.size(); ++dev) {
-            Acquisition::LatestEventSnapshot snapshot;
-            if (!acquisitions_[dev]->getLatestEventSnapshot(snapshot)) {
-                ImGui::Text("Device %zu (%s): waiting for first event...", dev,
-                            acquisitions_[dev]->address().c_str());
+            Acquisition::LatestEventSnapshotPtr snapshotPtr = acquisitions_[dev]->getLatestEventSnapshot();
+            activeSnapshots[dev] = snapshotPtr;
+            if (!snapshotPtr) {
                 continue;
             }
 
-            showedAny = true;
-
-            if (!sawAnySnapshot[dev] || snapshot.trigId != lastSeenTrigId[dev]) {
-                sawNewEvent = true;
-                sawAnySnapshot[dev] = true;
-                lastSeenTrigId[dev] = snapshot.trigId;
+            if (snapshotPtr != lastSnapshots[dev]) {
+                renderNeeded = true;
+                lastSnapshots[dev] = snapshotPtr;
             }
+
+            const auto &snapshot = *snapshotPtr;
 
             const int nChannels = snapshot.nChannels;
             const int samplesPerChannel = snapshot.recordLength;
             if (nChannels <= 0 || samplesPerChannel <= 0) {
-                ImGui::Text("Device %zu (%s): invalid event metadata", dev,
-                            acquisitions_[dev]->address().c_str());
                 continue;
             }
 
             if (static_cast<int>(channelVisible[dev].size()) != nChannels) {
-                channelVisible[dev].assign(nChannels, false);
+                channelVisible[dev].assign(static_cast<std::size_t>(nChannels), false);
                 sawFirstEvent[dev] = false;
+                renderNeeded = true;
+            }
+
+            std::vector<std::vector<float>> &devicePlotBuffers = plotBuffers[dev];
+            if (static_cast<int>(devicePlotBuffers.size()) != nChannels) {
+                devicePlotBuffers.assign(static_cast<std::size_t>(nChannels), {});
+                renderNeeded = true;
             }
 
             std::vector<bool> enabled(nChannels, false);
@@ -182,7 +173,90 @@ void GuiThread::guiLoop() {
                     }
                 }
                 sawFirstEvent[dev] = true;
+                renderNeeded = true;
             }
+
+            const int adcBits = std::max(1, snapshot.adcBits);
+            const double adcScale = 2.0 / static_cast<double>((1 << adcBits) - 1);
+            const double adcOffset = -1.0;
+
+            for (int ch = 0; ch < nChannels; ++ch) {
+                std::vector<float> &buffer = devicePlotBuffers[static_cast<std::size_t>(ch)];
+                if (static_cast<int>(buffer.size()) != samplesPerChannel) {
+                    buffer.assign(static_cast<std::size_t>(samplesPerChannel), 0.0f);
+                    renderNeeded = true;
+                }
+
+                if (!enabled[ch]) {
+                    continue;
+                }
+
+                const std::size_t base = static_cast<std::size_t>(ch) * static_cast<std::size_t>(samplesPerChannel);
+                if (base + static_cast<std::size_t>(samplesPerChannel) > snapshot.waveforms.size()) {
+                    continue;
+                }
+
+                const uint32_t validSamples = static_cast<uint32_t>(std::min<std::size_t>(
+                    static_cast<std::size_t>(samplesPerChannel),
+                    ch < static_cast<int>(snapshot.waveformSizes.size())
+                        ? static_cast<std::size_t>(snapshot.waveformSizes[ch])
+                        : static_cast<std::size_t>(0)));
+
+                for (uint32_t s = 0; s < validSamples; ++s) {
+                    buffer[static_cast<std::size_t>(s)] = static_cast<float>(snapshot.waveforms[base + s] * adcScale + adcOffset);
+                }
+                for (int s = static_cast<int>(validSamples); s < samplesPerChannel; ++s) {
+                    buffer[static_cast<std::size_t>(s)] = 0.0f;
+                }
+            }
+        }
+
+        if (!renderNeeded) {
+            SDL_Delay(1);
+            continue;
+        }
+
+        ImGui_ImplSDLRenderer2_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
+        ImGui::NewFrame();
+
+        ImGui::SetNextWindowPos(ImVec2(10.0f, 10.0f), ImGuiCond_Once);
+        ImGui::SetNextWindowSize(ImVec2(1260.0f, 860.0f), ImGuiCond_Once);
+        ImGui::Begin("Most Recent Event", nullptr,
+                     ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_MenuBar);
+
+        ImGui::TextUnformatted("Only enabled channels are listed. Use checkboxes to filter what is shown.");
+        ImGui::Separator();
+
+        bool showedAny = false;
+        for (std::size_t dev = 0; dev < acquisitions_.size(); ++dev) {
+            const auto &snapshotPtr = activeSnapshots[dev];
+            if (!snapshotPtr) {
+                ImGui::Text("Device %zu (%s): waiting for first event...", dev,
+                            acquisitions_[dev]->address().c_str());
+                continue;
+            }
+
+            showedAny = true;
+            const auto &snapshot = *snapshotPtr;
+            const int nChannels = snapshot.nChannels;
+            const int samplesPerChannel = snapshot.recordLength;
+            if (nChannels <= 0 || samplesPerChannel <= 0) {
+                ImGui::Text("Device %zu (%s): invalid event metadata", dev,
+                            acquisitions_[dev]->address().c_str());
+                continue;
+            }
+
+            std::vector<bool> enabled(nChannels, false);
+            int enabledCount = 0;
+            for (int ch = 0; ch < nChannels; ++ch) {
+                const bool isEnabled = ch < static_cast<int>(snapshot.waveformSizes.size()) && snapshot.waveformSizes[ch] > 0;
+                enabled[ch] = isEnabled;
+                if (isEnabled) {
+                    ++enabledCount;
+                }
+            }
+
             std::string header = "Device " + std::to_string(dev) + " - " + acquisitions_[dev]->address();
             if (ImGui::CollapsingHeader(header.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
                 if (ImGui::Button((std::string("Show all enabled##") + std::to_string(dev)).c_str())) {
@@ -223,39 +297,24 @@ void GuiThread::guiLoop() {
                 ImGui::BeginChild((std::string("PlotPanel##") + std::to_string(dev)).c_str(),
                                   ImVec2(0.0f, panelHeight), false);
 
-                const int adcBits = std::max(1, snapshot.adcBits);
-                const double adcScale = 2.0 / static_cast<double>((1 << adcBits) - 1);
-                const double adcOffset = -1.0;
-
                 const std::string plotTitle = "Waveforms##plot" + std::to_string(dev);
                 if (ImPlot::BeginPlot(plotTitle.c_str(), ImVec2(-1.0f, -1.0f))) {
                     ImPlot::SetupAxes("Sample", "Voltage (V)", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
                     ImPlot::SetupAxisLimits(ImAxis_X1, 0.0, static_cast<double>(samplesPerChannel), ImPlotCond_Always);
 
-                    std::vector<float> y(static_cast<std::size_t>(samplesPerChannel), 0.0f);
+                    const std::vector<std::vector<float>> &devicePlotBuffers = plotBuffers[dev];
                     for (int ch = 0; ch < nChannels; ++ch) {
                         if (!enabled[ch] || !channelVisible[dev][ch]) {
                             continue;
                         }
 
-                        const std::size_t base = static_cast<std::size_t>(ch) * static_cast<std::size_t>(samplesPerChannel);
-                        if (base + static_cast<std::size_t>(samplesPerChannel) > snapshot.waveforms.size()) {
+                        const std::vector<float> &buffer = devicePlotBuffers[static_cast<std::size_t>(ch)];
+                        if (static_cast<int>(buffer.size()) != samplesPerChannel) {
                             continue;
                         }
 
-                        const uint32_t validSamples = static_cast<uint32_t>(std::min<std::size_t>(
-                            static_cast<std::size_t>(samplesPerChannel),
-                            ch < static_cast<int>(snapshot.waveformSizes.size())
-                                ? static_cast<std::size_t>(snapshot.waveformSizes[ch])
-                                : static_cast<std::size_t>(0)));
-
-                        std::fill(y.begin(), y.end(), 0.0f);
-                        for (uint32_t s = 0; s < validSamples; ++s) {
-                            y[s] = static_cast<float>(snapshot.waveforms[base + s] * adcScale + adcOffset);
-                        }
-
                         const std::string lineLabel = "CH" + std::to_string(ch);
-                        ImPlot::PlotLine(lineLabel.c_str(), y.data(), samplesPerChannel);
+                        ImPlot::PlotLine(lineLabel.c_str(), buffer.data(), samplesPerChannel);
                     }
 
                     ImPlot::EndPlot();
@@ -285,16 +344,11 @@ void GuiThread::guiLoop() {
         }
 
         ImGui::End();
-
         ImGui::Render();
         SDL_SetRenderDrawColor(renderer, 20, 20, 20, 255);
         SDL_RenderClear(renderer);
         ImGui_ImplSDLRenderer2_RenderDrawData(ImGui::GetDrawData(), renderer);
         SDL_RenderPresent(renderer);
-
-        if (!sawNewEvent) {
-            SDL_Delay(1);
-        }
     }
 
     ImGui_ImplSDLRenderer2_Shutdown();

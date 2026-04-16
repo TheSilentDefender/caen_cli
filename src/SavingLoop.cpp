@@ -147,14 +147,16 @@ void Acquisition::savingLoop() {
 
         {
             std::lock_guard<std::mutex> lock(latestSnapshotMutex_);
-            latestSnapshot_.trigId = packet.trigId;
-            latestSnapshot_.timestamp = packet.timestamp;
-            latestSnapshot_.nChannels = nChannels_;
-            latestSnapshot_.recordLength = recordLength_;
-            latestSnapshot_.adcBits = adcBits_;
-            latestSnapshot_.waveforms = packet.waveforms;
-            latestSnapshot_.waveformSizes = packet.waveformSizes;
-            latestSnapshot_.hasData = true;
+            auto snapshot = std::make_shared<LatestEventSnapshot>();
+            snapshot->trigId = packet.trigId;
+            snapshot->timestamp = packet.timestamp;
+            snapshot->nChannels = nChannels_;
+            snapshot->recordLength = recordLength_;
+            snapshot->adcBits = adcBits_;
+            snapshot->waveforms = std::move(packet.waveforms);
+            snapshot->waveformSizes = std::move(packet.waveformSizes);
+            snapshot->hasData = true;
+            latestSnapshot_ = std::move(snapshot);
         }
 
         ++savedCount;

@@ -25,14 +25,9 @@ Acquisition::~Acquisition() {
     closeOutputFiles();
 }
 
-bool Acquisition::getLatestEventSnapshot(LatestEventSnapshot &snapshot) const {
+Acquisition::LatestEventSnapshotPtr Acquisition::getLatestEventSnapshot() const {
     std::lock_guard<std::mutex> lock(latestSnapshotMutex_);
-    if (!latestSnapshot_.hasData) {
-        return false;
-    }
-
-    snapshot = latestSnapshot_;
-    return true;
+    return latestSnapshot_;
 }
 
 void Acquisition::start() {
