@@ -98,6 +98,12 @@ void GuiThread::guiLoop() {
     ImPlot::CreateContext();
     ImGui::StyleColorsDark();
 
+    // Use standard LMB drag for box selection in this app.
+    ImPlotInputMap &inputMap = ImPlot::GetInputMap();
+    inputMap.Select = ImGuiMouseButton_Left;
+    inputMap.SelectCancel = ImGuiMouseButton_Right;
+    inputMap.Pan = ImGuiMouseButton_Middle;
+
     ImGui_ImplSDL2_InitForSDLRenderer(window, renderer);
     ImGui_ImplSDLRenderer2_Init(renderer);
 
@@ -116,6 +122,8 @@ void GuiThread::guiLoop() {
     std::vector<bool> hasZoomWindow(acquisitions_.size(), false);
     std::vector<double> zoomXMin(acquisitions_.size(), 0.0);
     std::vector<double> zoomXMax(acquisitions_.size(), 0.0);
+    std::vector<double> zoomYMin(acquisitions_.size(), -1.1);
+    std::vector<double> zoomYMax(acquisitions_.size(), 1.1);
 
     while (!stopRequested_) {
         bool renderNeeded = false;
@@ -348,11 +356,15 @@ void GuiThread::guiLoop() {
                         ImPlotRect selection = ImPlot::GetPlotSelection(ImAxis_X1, ImAxis_Y1);
                         double xMin = std::min(selection.X.Min, selection.X.Max);
                         double xMax = std::max(selection.X.Min, selection.X.Max);
+                        double yMin = std::min(selection.Y.Min, selection.Y.Max);
+                        double yMax = std::max(selection.Y.Min, selection.Y.Max);
                         xMin = std::clamp(xMin, 0.0, static_cast<double>(samplesPerChannel - 1));
                         xMax = std::clamp(xMax, 0.0, static_cast<double>(samplesPerChannel - 1));
-                        if (xMax > xMin) {
+                        if (xMax > xMin && yMax > yMin) {
                             zoomXMin[dev] = xMin;
                             zoomXMax[dev] = xMax;
+                            zoomYMin[dev] = yMin;
+                            zoomYMax[dev] = yMax;
                             hasZoomWindow[dev] = true;
                         }
                         ImPlot::CancelPlotSelection();
@@ -366,12 +378,13 @@ void GuiThread::guiLoop() {
                 const std::vector<std::vector<float>> &devicePlotBuffers = plotBuffers[dev];
                 const std::vector<std::vector<float>> &devicePlotXBuffers = plotXBuffers[dev];
                 if (hasZoomWindow[dev]) {
-                    ImGui::Text("Zoomed view: [%.0f, %.0f]", zoomXMin[dev], zoomXMax[dev]);
+                    ImGui::Text("Zoomed view: X[%.0f, %.0f]  Y[%.3f, %.3f]",
+                                zoomXMin[dev], zoomXMax[dev], zoomYMin[dev], zoomYMax[dev]);
                     const std::string zoomTitle = "Zoomed Waveforms##zoomplot" + std::to_string(dev);
                     if (ImPlot::BeginPlot(zoomTitle.c_str(), ImVec2(-1.0f, zoomHeight))) {
                         ImPlot::SetupAxes("Sample", "Voltage (V)", ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit);
                         ImPlot::SetupAxisLimits(ImAxis_X1, zoomXMin[dev], zoomXMax[dev], ImPlotCond_Always);
-                        ImPlot::SetupAxisLimits(ImAxis_Y1, -1.1, 1.1, ImPlotCond_Once);
+                        ImPlot::SetupAxisLimits(ImAxis_Y1, zoomYMin[dev], zoomYMax[dev], ImPlotCond_Always);
 
                         for (int ch = 0; ch < nChannels; ++ch) {
                             if (!enabled[ch] || !channelVisible[dev][ch]) {
