@@ -61,7 +61,8 @@ bool Acquisition::writeEventWaveforms(FILE *f,
         const uint16_t *raw = &packet.waveforms[static_cast<std::size_t>(ch) * recordLength_];
         const uint32_t writeSamples = std::min(samplesPerChannel, nSamples);
 
-        const int16_t activeChannel = (nSamples > 0) ? static_cast<int16_t>(ch) : static_cast<int16_t>(-1);
+        // Script-1 format expects a 2-byte per-channel activity flag.
+        const int16_t activeChannel = (nSamples > 0) ? static_cast<int16_t>(1) : static_cast<int16_t>(0);
         if (!writeChecked(f, &activeChannel, sizeof(int16_t), 1)) {
             return false;
         }
