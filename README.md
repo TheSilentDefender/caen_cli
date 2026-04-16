@@ -1,4 +1,4 @@
-# CAEN Readout (Quick Start)
+# CAEN Readout
 
 Command line tool for CAEN digitizers.
 
