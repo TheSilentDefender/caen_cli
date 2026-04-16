@@ -16,6 +16,17 @@
 
 class Acquisition {
 public:
+    struct LatestEventSnapshot {
+        uint32_t trigId = 0;
+        uint64_t timestamp = 0;
+        int nChannels = 0;
+        int recordLength = 0;
+        int adcBits = 0;
+        std::vector<uint16_t> waveforms;
+        std::vector<uint64_t> waveformSizes;
+        bool hasData = false;
+    };
+
     Acquisition(CaenScope &scope,
                 std::string outputDirectory,
                 std::string runToken,
@@ -47,6 +58,7 @@ public:
         return std::chrono::duration<double>(std::chrono::steady_clock::now() - startTime_).count();
     }
 
+    bool getLatestEventSnapshot(LatestEventSnapshot &snapshot) const;
 
     void sendTrigger();
 
@@ -119,6 +131,9 @@ private:
     uint64_t endpointHandle_ = 0;
 
     std::vector<float> voltsBuf_;
+
+    mutable std::mutex latestSnapshotMutex_;
+    LatestEventSnapshot latestSnapshot_;
 
     FILE *file_ = nullptr;
 

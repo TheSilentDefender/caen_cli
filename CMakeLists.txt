@@ -96,6 +96,11 @@ add_dependencies(CAEN::FELib caen_felib_ext)
 
 include(FetchContent)
 
+find_package(SDL2 QUIET)
+if(NOT SDL2_FOUND)
+    message(FATAL_ERROR "SDL2 is required for --gui support. Install SDL2 development files (e.g. libsdl2-dev).")
+endif()
+
 find_package(CLI11 QUIET)
 if(NOT CLI11_FOUND)
     FetchContent_Declare(CLI11
@@ -154,6 +159,42 @@ FetchContent_Declare(tomlplusplus
     GIT_SHALLOW    TRUE)
 FetchContent_MakeAvailable(tomlplusplus)
 
+FetchContent_Declare(imgui
+    GIT_REPOSITORY https://github.com/ocornut/imgui.git
+    GIT_TAG        v1.90.7
+    GIT_SHALLOW    TRUE)
+FetchContent_MakeAvailable(imgui)
+
+FetchContent_Declare(implot
+    GIT_REPOSITORY https://github.com/epezent/implot.git
+    GIT_TAG        v0.16
+    GIT_SHALLOW    TRUE)
+FetchContent_MakeAvailable(implot)
+
+add_library(imgui_sdl STATIC
+    ${imgui_SOURCE_DIR}/imgui.cpp
+    ${imgui_SOURCE_DIR}/imgui_draw.cpp
+    ${imgui_SOURCE_DIR}/imgui_tables.cpp
+    ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_sdl2.cpp
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_sdlrenderer2.cpp
+)
+target_include_directories(imgui_sdl PUBLIC
+    ${imgui_SOURCE_DIR}
+    ${imgui_SOURCE_DIR}/backends
+)
+target_link_libraries(imgui_sdl PUBLIC SDL2::SDL2)
+
+add_library(implot_lib STATIC
+    ${implot_SOURCE_DIR}/implot.cpp
+    ${implot_SOURCE_DIR}/implot_items.cpp
+)
+target_include_directories(implot_lib PUBLIC
+    ${implot_SOURCE_DIR}
+    ${imgui_SOURCE_DIR}
+)
+target_link_libraries(implot_lib PUBLIC imgui_sdl)
+
 set(CAEN_CLI_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 add_executable(caen_cli
@@ -163,6 +204,7 @@ add_executable(caen_cli
     ${CAEN_CLI_SRC_DIR}/AcquisitionSetup.cpp
     ${CAEN_CLI_SRC_DIR}/AcquisitionLoop.cpp
     ${CAEN_CLI_SRC_DIR}/SavingLoop.cpp
+    ${CAEN_CLI_SRC_DIR}/GuiThread.cpp
 )
 
 set_target_properties(caen_cli PROPERTIES
@@ -174,6 +216,9 @@ target_include_directories(caen_cli PRIVATE
     ${ftxui_SOURCE_DIR}/include
     ${ftxui_BINARY_DIR}/include
     ${CAEN_FELIB_INCLUDE_DIR}
+    ${imgui_SOURCE_DIR}
+    ${imgui_SOURCE_DIR}/backends
+    ${implot_SOURCE_DIR}
 )
 
 target_compile_options(caen_cli PRIVATE
@@ -192,6 +237,9 @@ target_link_libraries(caen_cli PRIVATE
     fmt::fmt
     nlohmann_json::nlohmann_json
     tomlplusplus::tomlplusplus
+    SDL2::SDL2
+    imgui_sdl
+    implot_lib
 )
 
 if(CAEN_SCOPE_FULLY_STATIC)

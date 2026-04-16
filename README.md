@@ -21,6 +21,7 @@ Options:
   -g,--get TEXT               Read and print a FELib path; may be repeated
   -t,--test                   Connect, print device info, and exit (requires --address)
   --reboot                    Send /cmd/reboot to all devices in settings file
+  --gui                       Open a GUI window with latest-event plots and channel filters
   -v,--verbose                Print detailed acquisition and settings diagnostics
 ```
 ## Build
@@ -39,6 +40,14 @@ cmake --build build -j
 ```bash
 ./build/caen_cli --settings example_settings.toml --output ./data
 ```
+
+GUI mode (separate rendering thread):
+
+```bash
+./build/caen_cli --settings example_settings.toml --output ./data --gui
+```
+
+In GUI mode, only enabled channels are listed by default. Use the per-channel checkboxes to hide/show enabled channels.
 
 ### Test a single device connection
 

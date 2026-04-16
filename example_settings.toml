@@ -1,8 +1,8 @@
-["dig2://192.168.0.72".par]
-acqtriggersource = "ITLA"
+["dig2://192.168.0.52".par]
+acqtriggersource = "ITLA | SWTrg"
 startsource = "SWcmd"
 recordlengths = "50000"
-pretriggers = "8000"
+pretriggers = "900"
 trgoutmode = "ITLA_OR_ITLB"
 itlamask = "2147483648"
 itlbmask = "2147483648"
@@ -10,41 +10,7 @@ itlagatewidth = "16"
 itlamainlogic = "OR"
 itlapairlogic = "None"
 
-["dig2://192.168.0.72".ch]
-chenable = "True"
-dcoffset = "50"
-selftriggeredge = "RISE"
-triggerthr = "3277"
-triggerthrmode = "Relative"
-
-["dig2://192.168.0.72".ch.31]
-itlconnect = "ITLA"
-triggerthr = "83"
-
-["dig2://192.168.0.75".par]
-acqtriggersource = "TrgIn"
-startsource = "FirstTrigger"
-recordlengths = "32500"
-pretriggers = "2000"
-trgoutmode = "TrgIn"
-clocksource = "FPClkIn"
-
-["dig2://192.168.0.75".ch]
-chenable = "True"
-dcoffset = "50"
-selftriggeredge = "RISE"
-triggerthr = "3277"
-triggerthrmode = "Relative"
-
-["dig2://192.168.0.85".par]
-acqtriggersource = "TrgIn"
-startsource = "FirstTrigger"
-recordlengths = "32500"
-pretriggers = "2000"
-trgoutmode = "Disabled"
-clocksource = "FPClkIn"
-
-["dig2://192.168.0.85".ch]
+["dig2://192.168.0.52".ch]
 chenable = "True"
 dcoffset = "50"
 selftriggeredge = "RISE"

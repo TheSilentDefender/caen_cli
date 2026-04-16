@@ -1,5 +1,6 @@
 #include "Acquisition.h"
 #include "CaenScope.h"
+#include "GuiThread.h"
 #include "Utils.h"
 
 #include <algorithm>
@@ -36,6 +37,7 @@ namespace {
         bool testConnection = false;
         bool reboot = false;
         bool verbose = false;
+        bool gui = false;
     };
 
     bool isChannelSection(const std::string &section) {
@@ -770,6 +772,8 @@ int main(int argc, char **argv) {
                  "Send /cmd/reboot to all devices in settings file");
     app.add_flag("-v,--verbose", options.verbose,
                  "Print detailed acquisition and settings diagnostics");
+    app.add_flag("--gui", options.gui,
+                 "Open a GUI window with latest-event plots and channel filters");
     CLI11_PARSE(app, argc, argv);
 
     spdlog::set_pattern("%v");
@@ -886,6 +890,17 @@ int main(int argc, char **argv) {
 
     for (auto &acq: acquisitions) {
         acq->start();
+    }
+
+    std::unique_ptr<GuiThread> guiThread;
+    if (options.gui) {
+        guiThread = std::make_unique<GuiThread>(acquisitions);
+        if (!guiThread->start()) {
+            util::printErr("[error] --gui requested but GUI window initialization failed\n");
+            stopAndJoinAcquisitions(acquisitions);
+            closeScopes(scopes, options.verbose);
+            return 1;
+        }
     }
 
     int totalChannels = 0;
@@ -1077,6 +1092,11 @@ int main(int argc, char **argv) {
     }
 
     stopAndJoinAcquisitions(acquisitions);
+
+    if (guiThread) {
+        guiThread->stop();
+        guiThread->join();
+    }
 
     // Stop and join the master display thread
     displayRunning = false;
