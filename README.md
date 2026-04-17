@@ -52,13 +52,13 @@ In GUI mode, only enabled channels are listed by default. Use the per-channel ch
 ### Test a single device connection
 
 ```bash
-./build/caen_cli --test --address "dig2://192.168.1.100"
+./build/caen_cli --test --address "dig2://192.168.0.100"
 ```
 
 ### Read one or more FELib paths
 
 ```bash
-./build/caen_cli --address "dig2://192.168.1.100" --get /par/modelname --get /par/numch
+./build/caen_cli --address "dig2://192.168.0.100" --get /par/modelname --get /par/numch
 ```
 
 ### Reboot device(s)
@@ -66,7 +66,7 @@ In GUI mode, only enabled channels are listed by default. Use the per-channel ch
 Single address:
 
 ```bash
-./build/caen_cli --reboot --address "dig2://192.168.1.100"
+./build/caen_cli --reboot --address "dig2://192.168.0.100"
 ```
 
 From settings file addresses:
